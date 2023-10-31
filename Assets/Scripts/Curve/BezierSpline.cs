@@ -322,9 +322,9 @@ public class BezierSpline : MonoBehaviour
             if (value.iterationSmall > 1f)
                 step = value.angleSmall / (value.iterationSmall - 1f);
             //number of times
-            for (int i = 0; i < value.iterationSmall; i++)
+            for (int i = 0; i < value.numAngle; i++)
             {
-                for (int j = 0; j < value.numAngle; j++)
+                for (int j = 0; j < value.iterationSmall; j++)
                 {
                     //Get Instance
                     PatternComponent pattern = reference.GetObject();
@@ -333,7 +333,8 @@ public class BezierSpline : MonoBehaviour
                     pattern.gameObject.transform.parent = attachTo.transform;
                     pattern.transform.position = attachTo.transform.position;
 
-                    float angle = (step * i) + (value.angleLarge * j) + value.offsetAngle;
+                    //formula for where angle is aligned.
+                    float angle = (step * j) + (value.angleLarge * i) + (value.angleSmall * i) + value.offsetAngle;
 
                     //Set up particle system.
                     pattern.PatternConfig(value, angle);

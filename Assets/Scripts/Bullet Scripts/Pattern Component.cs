@@ -196,7 +196,7 @@ public class PatternComponent : MonoBehaviour
             float offset = Mathf.Atan2(vector2player.y, vector2player.x) * 180f / Mathf.PI;
 
             //midpoint (find max angle and divide it by 2)
-            float midPoint = (value.angleLarge * (value.numAngle - 1) + value.angleSmall) * 0.5f;
+            float midPoint = ((value.numAngle * value.angleSmall) + ((value.numAngle - 1f) * value.angleLarge)) * 0.5f;
             //set the angle and shoot
             transform.eulerAngles = new Vector3(this.cacheAngle - offset - midPoint, 90f, 0f);
             cacheAngle += value.spinSpeed;

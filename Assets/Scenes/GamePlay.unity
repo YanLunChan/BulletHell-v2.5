@@ -965,10 +965,10 @@ MonoBehaviour:
       projSpeed: 5
       projSize: 0.25
       projMat: {fileID: 10754, guid: 0000000000000000f000000000000000, type: 0}
-      target: 1
+      target: 0
       iterationSmall: 2
       angleSmall: 10
-      angleLarge: 45
+      angleLarge: 30
       offsetAngle: 0
       numAngle: 3
       pointNum: 0
