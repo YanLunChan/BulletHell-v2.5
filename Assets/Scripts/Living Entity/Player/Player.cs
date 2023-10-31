@@ -11,6 +11,8 @@ public class Player : LivingEntity
     [SerializeField] private ParticleSystem[] muzzle;
     [SerializeField] private GameObject pauseMenu;
     [SerializeField] private float attackCool;
+    [SerializeField] private AudioSource attackSound;
+
     //attack variable
     private bool attackReady = true;
     private bool attackPressed = false;

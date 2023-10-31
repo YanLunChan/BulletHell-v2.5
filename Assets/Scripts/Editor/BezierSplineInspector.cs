@@ -1,6 +1,7 @@
-using UnityEditor;
 using UnityEngine;
-
+#if UNITY_EDITOR
+using UnityEditor;
+#endif
 [CustomEditor(typeof(BezierSpline))]
 public class BezierSplineInspector : Editor
 {
@@ -10,21 +11,37 @@ public class BezierSplineInspector : Editor
 
     private int selectedIndex = -1;
 
-    private const float directionScale = 0.5f;
+    private const float directionScale = 10f;
     private const int stepsPerCurve = 10;
+
+    private bool showSlope = false;
 
     private BezierSpline spline;
     private Transform handleTransform;
     private Quaternion handleRotation;
 
+    private SerializedProperty enemySettings;
+    private SerializedProperty shootDurations;
 
     private static Color[] modeColors = {
         Color.white,
         Color.yellow,
         Color.cyan
     };
+    private void OnEnable()
+    {
+        //enemy struct variables
+        enemySettings = serializedObject.FindProperty("enemySettings");
+        shootDurations = serializedObject.FindProperty("shootDurations");
+        //buttons when spline component is in inspector
+        spline = target as BezierSpline;
+
+    }
     private void OnSceneGUI()
     {
+        //enemy struct variables
+        enemySettings = serializedObject.FindProperty("enemySettings");
+        //spline variables
         spline = target as BezierSpline;
         handleTransform = spline.transform;
         handleRotation = Tools.pivotRotation == PivotRotation.Local ?
@@ -48,8 +65,11 @@ public class BezierSplineInspector : Editor
     }
     public override void OnInspectorGUI()
     {
-        spline = target as BezierSpline;
         EditorGUI.BeginChangeCheck();
+        if (GUILayout.Button("Toggle Show Slope"))
+        {
+            showSlope = !showSlope;
+        }
         bool loop = EditorGUILayout.Toggle("Loop", spline.Loop);
         if (EditorGUI.EndChangeCheck())
         {
@@ -57,9 +77,14 @@ public class BezierSplineInspector : Editor
             EditorUtility.SetDirty(spline);
             spline.Loop = loop;
         }
+        //if selected point then display point and vertex
         if (selectedIndex >= 0 && selectedIndex < spline.ControlPointCount)
         {
             DrawSelectedPointInspector();
+        }
+        else 
+        {
+            DrawEnemySettings();
         }
         if (GUILayout.Button("Add Curve"))
         {
@@ -89,17 +114,35 @@ public class BezierSplineInspector : Editor
             EditorUtility.SetDirty(spline);
         }
     }
+    private void DrawEnemySettings() 
+    {
+        GUILayout.Label("\nEnemy Variables Used For Spawn");
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(enemySettings, true);
+        if(EditorGUI.EndChangeCheck())
+            serializedObject.ApplyModifiedProperties();
 
+        GUILayout.Label("\nWhere will the enemy stop and for how long?");
+        EditorGUI.BeginChangeCheck();
+        EditorGUILayout.PropertyField(shootDurations, true);
+        if (EditorGUI.EndChangeCheck())
+            serializedObject.ApplyModifiedProperties();
+
+
+    }
     private void ShowDirections()
     {
-        Handles.color = Color.green;
-        Vector3 point = spline.GetPoint(0f);
-        Handles.DrawLine(point, point + spline.GetDirection(0f) * directionScale);
-        int steps = stepsPerCurve * spline.CurveCount;
-        for (int i = 1; i <= steps; i++)
+        if (showSlope)
         {
-            point = spline.GetPoint(i / (float)steps);
-            Handles.DrawLine(point, point + spline.GetDirection(i / (float)steps) * directionScale);
+            Handles.color = Color.green;
+            Vector3 point = spline.GetPoint(0f);
+            Handles.DrawLine(point, point + spline.GetDirection(0f) * directionScale);
+            int steps = stepsPerCurve * spline.CurveCount;
+            for (int i = 1; i <= steps; i++)
+            {
+                point = spline.GetPoint(i / (float)steps);
+                Handles.DrawLine(point, point + spline.GetDirection(i / (float)steps) * directionScale);
+            }
         }
     }
     private Vector3 ShowPoint(int index)
