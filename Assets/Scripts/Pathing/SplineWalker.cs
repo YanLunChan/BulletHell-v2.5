@@ -96,7 +96,7 @@ public class SplineWalker : MonoBehaviour
         speed = settings.speed;
         //Initial wait time.
         float cache = 0f;
-        while (cache < (settings.baseWait + settings.increWait * index))
+        while (cache < (settings.increWait * index))
         {
             cache += Time.deltaTime;
             yield return null;

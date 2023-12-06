@@ -15,8 +15,11 @@ public class ParticleManager : ObjectPool<PatternComponent>
         //game script's gameobject
         PatternComponent bulletRef = cache.AddComponent<PatternComponent>();
 
-        //set property
-        bulletRef.SetVariables(this.gameObject, target);
+        //set target
+        bulletRef.SetVariables(target);
+
+        //get return to and put requeue into return to so when it dies it automaticallyl reque back if created by manager.
+        bulletRef.ReturnTo = () => ReQueue(bulletRef);
         return bulletRef;
     }
 

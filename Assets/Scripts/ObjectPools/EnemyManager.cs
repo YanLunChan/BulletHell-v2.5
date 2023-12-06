@@ -14,6 +14,9 @@ public class EnemyManager : ObjectPool<GameObject>
     {
         //Instantiate Enemy
         GameObject enemy = Instantiate(enemyPrefab, Vector3.zero, Quaternion.identity, gameObject.transform);
+
+        //get enemy_mob component and attach this back to manager. 
+        enemy.GetComponent<Enemy_Mob>().DeathReturn = () => ReQueue(enemy);
         return enemy;
     }
     public override void ReQueue(GameObject reference)

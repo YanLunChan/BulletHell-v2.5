@@ -18,7 +18,6 @@ public struct Enemy_Settings
     //Enemy Variables (HP, wait time before leaving from spawn, speed etc...)
     public int health;
     //Enemy Start Movement settings.
-    public float baseWait;
     public float increWait;
     public float speed;
 
@@ -300,7 +299,7 @@ public class BezierSpline : MonoBehaviour
             enemySettings.sharedvalue?.Initialization(reference);
 
             Enemy_Mob cache = reference.GetComponent<Enemy_Mob>();
-            cache.SetSplinetoWalker(this);
+            cache.OnSetup(this, enemySettings.health);
 
             //Start Couroutine (Initial spawn timer, incrementing wait, index, and shooting locaiton and duration)
             cache.Walker.StartCoroutine(cache.Walker.Cycle(enemySettings, index, shootDurations));
@@ -343,10 +342,11 @@ public class BezierSpline : MonoBehaviour
             }
         }
     }
-
-    //debug
-    private void Start()
+    public void StartBezierSpline()
     {
-        InitializeEnemy(0);
+        for(int i = 0; i < enemySettings.numVolley; i++) 
+        {
+            InitializeEnemy(i);
+        }
     }
 }

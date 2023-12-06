@@ -16,7 +16,7 @@ public class EnemySO : ScriptableObject
     //bullet patter goes here
     [SerializeField] private AudioClip shootSound;
 
-    [SerializeField] private List<GameObject> spawnedObjects = new List<GameObject>();
+    [SerializeField] public List<GameObject> spawnedObjects = new List<GameObject>();
 
     //any function used to initialize to create copy.
     public void Initialization(GameObject reference) 

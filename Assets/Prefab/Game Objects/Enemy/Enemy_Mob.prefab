@@ -15,7 +15,7 @@ GameObject:
   - component: {fileID: 1046624897078860645}
   - component: {fileID: 5380598487041824790}
   - component: {fileID: -7191990049191423392}
-  m_Layer: 0
+  m_Layer: 7
   m_Name: Enemy_Mob
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -134,7 +134,7 @@ BoxCollider2D:
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 0.0001, y: 0.0001}
+  m_Size: {x: 1, y: 1}
   m_EdgeRadius: 0
 --- !u!114 &1046624897078860645
 MonoBehaviour:

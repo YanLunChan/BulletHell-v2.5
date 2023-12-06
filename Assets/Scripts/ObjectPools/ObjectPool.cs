@@ -16,8 +16,7 @@ public abstract class ObjectPool<U> : Singleton<ObjectPool<U>>
         base.Awake();
         for (int i = 0; i < INITIAL_AMOUNT; i++)
         {
-            Queue<U> cache = new Queue<U>();
-            cache.Enqueue(InitializeObjectPool());
+            pool.Enqueue(InitializeObjectPool());
         }
     }
     protected abstract U InitializeObjectPool();
