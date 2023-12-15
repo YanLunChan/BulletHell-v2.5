@@ -1,7 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
-using UnityEditor;
 using UnityEngine;
 public enum SplineWalkerMode
 {
@@ -10,24 +7,22 @@ public enum SplineWalkerMode
     PingPong
 }
 /// <summary>
-/// This script is used purely for walking on the spline. Currently it is uses for enemy mob to move along the spline curve.
+/// This script is used purely for walking on the spline. 
 /// </summary>
 public class SplineWalker : MonoBehaviour
 {
-    private BezierSpline spline;
+    public BezierSpline spline;
 
     //go should be off until spline has a reference or else null exception error.
-    [SerializeField] private bool go = false;
-    [SerializeField] private bool lookForward;
-    [SerializeField] private float offsetAngle;
-    [SerializeField] private float speed;
+    public bool go = false;
+    public bool lookForward;
+    public float offset;
+    public float speed;
 
-    private float progress = 0;
-    private bool goingForward = true;
+    private float progress;
+    private bool goingForward;
 
     private Action destinationAction;
-
-    public BezierSpline Spline{ get { return spline; }  set { spline = value; } }
     private void Update()
     {
         if (!go)
@@ -36,6 +31,7 @@ public class SplineWalker : MonoBehaviour
         if (goingForward)
         {
             //progress += Time.deltaTime / duration;
+            //might change to progress += duration, because it would make the speed more constant when going on curves ()
             progress += speed * Time.deltaTime;
             if (progress > 1f)
             {
@@ -61,9 +57,14 @@ public class SplineWalker : MonoBehaviour
         {
             float angle = goingForward ? Mathf.Atan2(spline.GetDirection(progress).y, spline.GetDirection(progress).x) * Mathf.Rad2Deg :
                                         Mathf.Atan2(spline.GetDirection(progress).y, spline.GetDirection(progress).x) * Mathf.Rad2Deg - 180f;
-            transform.rotation = Quaternion.Euler(0f, 0f, angle - offsetAngle);
+            transform.rotation = Quaternion.Euler(0f, 0f, angle - offset);
         }
     }
+    public void SetObject()
+    {
+        transform.position = spline.GetPoint(progress);
+    }
+
     public float Progress
     {
         get => progress;
@@ -76,6 +77,7 @@ public class SplineWalker : MonoBehaviour
         if (mode == SplineWalkerMode.Once)
         {
             destinationAction = () => progress = 1;
+            destinationAction += Unlink;
         }
         else if (mode == SplineWalkerMode.Loop)
             destinationAction = () => progress -= 1;
@@ -86,55 +88,15 @@ public class SplineWalker : MonoBehaviour
                 goingForward = false;
             };
     }
-
-
-    //Coroutine for pausing movement
-
-    public IEnumerator Cycle(Enemy_Settings settings, int index, TupleInspector<float>[] duration) 
+    public void Unlink() 
     {
-        //Setting the Cycle
-        speed = settings.speed;
-        //Initial wait time.
-        float cache = 0f;
-        while (cache < (settings.increWait * index))
+        //reset destination action so when enemy despawn / dies, set it to null, needs to be set everytime.
+
+        for(int i = transform.childCount - 1; i >= 0; i--) 
         {
-            cache += Time.deltaTime;
-            yield return null;
+            if (transform.GetChild(i).GetComponent<BulletPattern>())
+                transform.GetChild(i).GetComponent<BulletPattern>().UnLink();
         }
-        go = true;
-        
-        foreach (TupleInspector<float> pause in duration)
-        {
-
-            if (goingForward)
-            {
-                while (progress < pause.destination + (pause.incrDes * index))
-                {
-                    yield return null;
-                }
-                go = !go;
-                //enemy attack goes here.
-                gameObject.GetComponent<LivingEntity>().Attack?.Invoke();
-                //wait for a while
-                yield return new WaitForSeconds(pause.time + pause.incrTime * index);
-                go = true;
-            }
-            else
-            {
-                while (progress > pause.destination + (pause.incrDes * index))
-                {
-                    yield return null;
-                }
-                //check if the enemy needs to stop to shoot?
-                go = !go;
-                //enemy attack goes here.
-                gameObject.GetComponent<LivingEntity>().Attack?.Invoke();
-                //wait for a while
-                yield return new WaitForSeconds(pause.time + pause.incrTime * index);
-                go = true;
-
-            }
-        }
-
+        destinationAction = null;
     }
 }

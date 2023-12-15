@@ -1,63 +1,13 @@
 using UnityEngine;
 using System;
-using Unity.VisualScripting;
-using UnityEngine.UIElements;
-/// <summary>
-/// This section is used to initialize the settings and location the mob should spawn in.
-/// Enemy setting is used to put all settings for enemy in one struct to initalize per wave.
-/// </summary>
-[Serializable]
-public struct Enemy_Settings 
-{
-    //shared default settings
-    public EnemySO sharedvalue;
-    //number of volley
-    public int numVolley;
-    //Reference to enemy_manager (if doesn't exist then won't run due to nullable)
-    public EnemyManager eManager;
-    //Enemy Variables (HP, wait time before leaving from spawn, speed etc...)
-    public int health;
-    //Enemy Start Movement settings.
-    public float increWait;
-    public float speed;
-
-    //Bullet Variables (Pattern, shotspeed, Shotnum, delay)
-    [SerializeField] public BulletVariables[] bulletPatterns;
-
-}
-/// <summary>
-/// This Struct is incharge of keeping all information on where to stop on the curve and when the enemy needs to shoot.
-/// </summary>
-[Serializable]
-public struct TupleInspector<T>
-{
-    [Range(0f,1f)] public T destination;
-    public T incrDes;
-    [Min(0f)] public T time;
-    public T incrTime;
-
-    public TupleInspector(T left, T right, T incrDes, T incrTime)
-    {
-        this.destination = left;
-        this.time = right;
-        this.incrDes = incrDes;
-        this.incrTime = incrTime;
-    }
-}
 public class BezierSpline : MonoBehaviour
 {
-    //Reference for Singleton here
-
-    //Varaible for Spline
-    [SerializeField] private Vector3[] points;
-    [SerializeField] private BezierControlPointMode[] modes;
-    [SerializeField] private bool loop;
-
-    //Variables for enemy
-    [SerializeField] private Enemy_Settings enemySettings;
-    //Enemy Shooting/Pauing duration
-    [SerializeField] private TupleInspector<float>[] shootDurations;
-
+    [SerializeField]
+    private Vector3[] points;
+    [SerializeField]
+    private BezierControlPointMode[] modes;
+    [SerializeField]
+    private bool loop;
     public bool Loop
     {
         get
@@ -80,13 +30,6 @@ public class BezierSpline : MonoBehaviour
         {
             return points.Length;
         }
-    }
-    public Enemy_Settings EnemySettings 
-    { 
-        get 
-        { 
-            return enemySettings; 
-        } 
     }
     public Vector3 GetControlPoint(int index)
     {
@@ -284,69 +227,5 @@ public class BezierSpline : MonoBehaviour
             BezierControlPointMode.Free,
             BezierControlPointMode.Free
         };
-    }
-
-    //Initialize enemy class
-    public void InitializeEnemy(int index) 
-    {
-        GameObject reference = enemySettings.eManager.GetObject();
-        //check if emanager is valid
-        if (enemySettings.eManager)
-        {
-            reference.gameObject.transform.parent = gameObject.transform;
-
-            reference.transform.position = GetPoint(0);
-            enemySettings.sharedvalue?.Initialization(reference);
-
-            Enemy_Mob cache = reference.GetComponent<Enemy_Mob>();
-            cache.OnSetup(this, enemySettings.health);
-
-            //Start Couroutine (Initial spawn timer, incrementing wait, index, and shooting locaiton and duration)
-            cache.Walker.StartCoroutine(cache.Walker.Cycle(enemySettings, index, shootDurations));
-
-            ApplyPattern(reference);
-        }
-    }
-    public void ApplyPattern(GameObject attachTo)
-    {
-        //Attach number of Particle Component here.
-        ObjectPool<PatternComponent> reference = ParticleManager.GetInstance();
-        if (reference == null)
-            return;
-
-        // foreach bullet variable inside the array
-        foreach (BulletVariables value in enemySettings.bulletPatterns)
-        {
-            float step = 0f;
-            if (value.iterationSmall > 1f)
-                step = value.angleSmall / (value.iterationSmall - 1f);
-            //number of times
-            for (int i = 0; i < value.numAngle; i++)
-            {
-                for (int j = 0; j < value.iterationSmall; j++)
-                {
-                    //Get Instance
-                    PatternComponent pattern = reference.GetObject();
-
-                    //attach pattern to parent of parameter and set position
-                    pattern.gameObject.transform.parent = attachTo.transform;
-                    pattern.transform.position = attachTo.transform.position;
-
-                    //formula for where angle is aligned.
-                    float angle = (step * j) + (value.angleLarge * i) + (value.angleSmall * i) + value.offsetAngle;
-
-                    //Set up particle system.
-                    pattern.PatternConfig(value, angle);
-                }
-
-            }
-        }
-    }
-    public void StartBezierSpline()
-    {
-        for(int i = 0; i < enemySettings.numVolley; i++) 
-        {
-            InitializeEnemy(i);
-        }
     }
 }

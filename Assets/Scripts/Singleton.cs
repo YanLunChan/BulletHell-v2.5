@@ -16,7 +16,7 @@ public class Singleton<T> : MonoBehaviour where T : Component
         if (instance == null)
         {
             instance = this.GetComponent<T>();
-            gameObject.hideFlags = HideFlags.HideAndDontSave;
+            //gameObject.hideFlags = HideFlags.HideAndDontSave;
         }
         else 
         {

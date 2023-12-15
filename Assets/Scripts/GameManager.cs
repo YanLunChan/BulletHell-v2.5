@@ -1,56 +1,102 @@
-using System;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
+using UnityEditorInternal;
 using UnityEngine;
 
-[Serializable]
-public struct WaveManagement 
-{
-    public float initialWait;
-    public VolleySettings[] settings;
-}
-[Serializable]
-public struct VolleySettings 
-{
-    public BezierSpline spline;
-    public float delayTime;
-}
 public class GameManager : Singleton<GameManager>
 {
-    [SerializeField] private WaveManagement waveManagement;
+    [System.Serializable]
+    internal struct EnemyVolley 
+    {
+        [Header("Delays")]
+        //should be called in game manager
+        public float startDelay;
+        //should be called in enemy class
+        public float baseWaitDelay;
+        public float incremWaitDelay;
 
-    [SerializeField] private GameObject BossHeathUI;
-    [SerializeField] private GameObject Boss;
-    //In charge of the start of level spawn.
+        [Header("Number of enemy per wave")]
+        public int volleyNum;
+
+        [Header("Enemy shooting settings")]
+        public EnemySetting settings;
+
+        [Header("Percentage on spline where enemy call attack")]
+        [Range(0, 1)] public float[] baseActPer;
+        [Range(-1, 1)] public float incremActPer;
+
+        [Header("Spline Variable")]
+        public float speed;
+        [Header("Health Ammount")]
+        public int health;
+        [System.Serializable]
+        public struct EnemySetting
+        {
+            [Header("Parent so you can get enemy from pool")]
+            public GameObject enemyParentRef;
+            public GameObject bulletParentRef;
+            [Header("How do the enemy shoot?")]
+            public BulletVariables[] enemySetting;
+
+
+            //public float baseWaitDelay;
+            public bool shootStop;
+            public float angleOffset;
+
+            [Header("Where to spawn")]
+            public BezierSpline spline;
+            public SplineWalkerMode mode;
+        }
+    }
+    [SerializeField] private EnemyVolley[] volley;
+    [SerializeField] private GameObject boss;
+    [SerializeField] private GameObject bossHP;
     private IEnumerator Start()
     {
-        float initialCache = 0f;
-        while(initialCache < waveManagement.initialWait) 
+        float bossTimerCache = 0f; 
+        //set initial delay
+        for (int i = 0; i < volley.Length; i++) 
         {
-            initialCache += Time.deltaTime;
-            yield return null;
-        }
-        //repeat cycle starts here
-        foreach(VolleySettings vs in waveManagement.settings) 
-        {
-            float delayCache = 0f;
-            while(delayCache < vs.delayTime) 
+            //inital delay per wave (if zero then )
+            float cache = 0f;
+            while (cache < volley[i].startDelay)
             {
-                delayCache += Time.deltaTime;
+                cache += Time.deltaTime;
                 yield return null;
             }
-            //call bezier function to spawn stuff
-            vs.spline.StartBezierSpline();
+            for (int j = 0; j < volley[i].volleyNum; j++)
+            {
+                //take bullet variable and get patterns from manager and attach to enemy reference...
+                //Cache Enemy
+                Enemy enemyRef = EnemyManager.GetInstance().GetObject(volley[i].settings.enemyParentRef);
+                enemyRef.transform.position = volley[i].settings.spline.GetPoint(0);
+                enemyRef.gameObject.SetActive(true);
+                //Set Pattern
+                enemyRef.SetPatterns(volley[i].settings.bulletParentRef, volley[i].settings.enemySetting);
+                //Set Spline
+                enemyRef.walker.Progress = 0;
+                enemyRef.walker.spline = volley[i].settings.spline;
+                enemyRef.walker.speed = volley[i].speed;
+                enemyRef.walker.SetMode(volley[i].settings.mode);
+                //set shooting settings
+                enemyRef.shootStop = volley[i].settings.shootStop;
+
+                enemyRef.indexShot = j;
+
+                enemyRef.health = volley[i].health;
+                
+                //start wait-time coroutine
+                enemyRef.StartCoroutine(enemyRef.WaitFor(volley[i].baseWaitDelay + (volley[i].incremWaitDelay * j), volley[i].baseActPer, volley[i].incremActPer));
+            }
         }
-        //after 5 seconds spawn boss
-        initialCache = 0f;
-        while(initialCache < 5f) 
+        while(bossTimerCache < 10f) 
         {
-            initialCache += Time.deltaTime;
+            bossTimerCache += Time.deltaTime;
             yield return null;
         }
-        BossHeathUI.SetActive(true);
-        Boss.SetActive(true);
+        boss.SetActive(true);
+        bossHP.SetActive(true);
         yield return null;
     }
 }
